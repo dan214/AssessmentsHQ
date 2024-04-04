@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 /* eslint-disable react/jsx-no-comment-textnodes */
 "use client"
+import axiosApi from "@/helpers/fetch";
 import { useEffect, useState } from "react";
 
 const query = `
@@ -16,32 +17,26 @@ const query = `
 }
 `
 
-export default function Home() {
+const Home: React.FC = () => {
   // define the initial state
-  const [page, setPage] = useState(null);
+  const [page, setPage] = useState()
 
   useEffect(() => {
-    window
-      .fetch(`https://graphql.contentful.com/content/v1/spaces/aliqirq3u5g5/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Authenticate the request
-          Authorization: "Bearer KAljMffebxLiF5bmndoYxDl2SCgdaMwsi0mxGHD2tdg",
-        },
-        // send the GraphQL query
-        body: JSON.stringify({ query }),
-      })
-      .then((response) => response.json())
-      .then(({ data, errors }) => {
-        if (errors) {
-          console.error(errors);
-        }
-
-        // rerender the entire component with new data
-        setPage(data.pageCollection.items[0]);
-      });
+    fetchAssessments();
   }, []);
+
+  const fetchAssessments = async () => {
+    try {
+      axiosApi.getContentfulData(query).then((response) => {
+        console.log("set department");
+        console.log(response.data.data.pageCollection.items[0]);
+        setPage(response.data.data.pageCollection.items[0]);
+
+      })
+    } catch (error) {
+      console.error('An error occurred while fetching parent options', error);
+    }
+  }
 
   // show a loading screen case the data hasn't arrived yet
   if (!page) {
@@ -52,9 +47,13 @@ export default function Home() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={page.logo.url} className="App-logo" alt="logo" />
-        <p>{page.title}</p>
+        {page ? (
+          <><img src={page.logo.url} className="App-logo" alt="logo" /><p>{page.title}</p></>
+        ) : null}
+
       </header>
     </div>
   );
 }
+
+export default Home;
